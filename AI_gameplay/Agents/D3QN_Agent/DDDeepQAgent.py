@@ -33,7 +33,7 @@ class DDDQAgent:
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.action_memory = np.zeros(self.mem_size, dtype=np.int8)
         self.reward_memory = np.zeros(self.mem_size, dtype=np.int8)
-        self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
+        self.terminal_memory = np.zeros(self.mem_size, dtype=bool)
 
     # Push a transition to replay memory
     def store_transition(self, state, action, reward, state_, terminal):

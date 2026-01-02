@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
@@ -6,7 +6,6 @@ from Agents.DQN_Agent.DeepQAgent import DQAgent
 from Agents.D3QN_Agent.DDDeepQAgent import DDDQAgent
 from atari_wrapper import wrap_deepmind
 from Visualize import save_agent_gif, _label_with_episode_number
-# from notebook_video_writer import VideoWriter
 cv2.ocl.setUseOpenCL(False)
 
 def plotLearning(scores, x=None, window=5):
@@ -21,9 +20,9 @@ def plotLearning(scores, x=None, window=5):
   plt.plot(x, running_avg)
 
 def train(x, agent_type):
-  env = gym.make("ALE/Pong-v5", render_mode= 'rgb_array')
+  env = gym.make("ALE/Pong-v5", render_mode='rgb_array')
   env = wrap_deepmind(env, frame_stack=True, scale=True)
-  env.seed(42)
+  env.reset(seed=42)
   if agent_type == "DQN":
     agent = DQAgent(gamma=0.99, epsilon=1.0, batch_size=32, n_actions=6, eps_end=0.01,
                   input_dims=(4, 84, 84), lr=0.0001)
@@ -43,15 +42,16 @@ def train(x, agent_type):
     score = 0
 
     # Run environment with agent control
-    done = False
-    observation = env.reset()
+    terminated = truncated = False
+    observation, info = env.reset()
     observation = np.array(observation).reshape(4, 84, 84)
 
-    while not done:
+    while not (terminated or truncated):
       action = agent.choose_action(observation)
-      observation_, reward, done, info = env.step(action)
+      observation_, reward, terminated, truncated, info = env.step(action)
       observation_ = np.array(observation_).reshape(4, 84, 84)
       score += reward
+      done = terminated or truncated
       agent.store_transition(observation, action, reward, observation_, done)
       agent.learn()
       observation = observation_
@@ -72,9 +72,9 @@ def train(x, agent_type):
   plotLearning(scores, window=10)
 
 def test(agent_type):
-  env = gym.make("ALE/Pong-v5", render_mode= 'rgb_array')
+  env = gym.make("ALE/Pong-v5", render_mode='rgb_array')
   env = wrap_deepmind(env, frame_stack=True, scale=True)
-  env.seed(42)
+  env.reset(seed=42)
   if agent_type == "DQN":
     agent = DQAgent(gamma=0.99, epsilon=0.01, batch_size=32, n_actions=6, eps_end=0.01,
                   input_dims=(4, 84, 84), lr=0.0001)
@@ -82,16 +82,15 @@ def test(agent_type):
     agent = DDDQAgent(gamma=0.99, epsilon=0.01, batch_size=32, n_actions=6, eps_end=0.01,
                   input_dims=(4, 84, 84), lr=0.0001)   
   agent.load_model(agent_type)
-  done = False
-  observation = env.reset()
+  terminated = truncated = False
+  observation, info = env.reset()
   observation = np.array(observation).reshape(4, 84, 84)
   env_video = []
   score = 0
-  frames = 1000
-  while not done:
+  while not (terminated or truncated):
     action = agent.choose_action(observation)
-    env_video.append(_label_with_episode_number(env.render(mode= 'rgb_array')))
-    observation, reward, done, info = env.step(action)
+    env_video.append(_label_with_episode_number(env.render()))
+    observation, reward, terminated, truncated, info = env.step(action)
     observation = np.array(observation).reshape(4, 84, 84)
     score += reward
   

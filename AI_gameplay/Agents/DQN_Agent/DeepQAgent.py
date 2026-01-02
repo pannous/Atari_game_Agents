@@ -33,7 +33,7 @@ class DQAgent:
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.action_memory = np.zeros(self.mem_size, dtype=np.int8)
         self.reward_memory = np.zeros(self.mem_size, dtype=np.int8)
-        self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
+        self.terminal_memory = np.zeros(self.mem_size, dtype=bool)
 
     # Push a transition to replay memory
     def store_transition(self, state, action, reward, state_, terminal):
@@ -89,14 +89,11 @@ class DQAgent:
 
         # Estimate Q value
         q_eval = self.Q_eval.forward(state_batch)
-        print(q_eval.shape)
         q_eval = q_eval[batch_index, action_batch]
-        print(q_eval.shape)
         q_next = self.Q_target.forward(new_state_batch)
         q_next[terminal_batch] = 0.0
 
         q_target = reward_batch + self.gamma*torch.max(q_next, dim=1)[0]
-        print(q_target.shape)
         # Propagation
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
         loss.backward()
