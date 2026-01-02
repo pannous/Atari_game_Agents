@@ -1,4 +1,5 @@
 import gymnasium as gym
+import ale_py
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
@@ -6,6 +7,9 @@ from Agents.DQN_Agent.DeepQAgent import DQAgent
 from Agents.D3QN_Agent.DDDeepQAgent import DDDQAgent
 from atari_wrapper import wrap_deepmind
 from Visualize import save_agent_gif, _label_with_episode_number
+
+# Register ALE environments
+gym.register_envs(ale_py)
 cv2.ocl.setUseOpenCL(False)
 
 def plotLearning(scores, x=None, window=5):
